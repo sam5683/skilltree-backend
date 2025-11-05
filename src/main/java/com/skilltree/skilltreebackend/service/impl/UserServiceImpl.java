@@ -74,7 +74,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public User login(String email, String password) {
+    public User login(@org.springframework.lang.NonNull String email, @org.springframework.lang.NonNull String password) {
         User user = findByEmail(email);
         if (user != null && passwordEncoder.matches(password, user.getPassword())) {
             user.setLastLogin(LocalDateTime.now());

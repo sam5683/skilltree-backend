@@ -1,0 +1,884 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <!-- Meta Tags -->
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Skill Tree - Build and grow your knowledge tree with AI-powered learning." />
+  <meta name="keywords" content="skill tree, learning, AI, education" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="mobile-web-app-capable" content="yes" />
+
+  <!-- External Libraries -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <title>Skill Tree</title>
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+  <link rel="stylesheet" href="/styles.css">
+  <link rel="stylesheet" href="/layout.css">
+  <script src="/repulsion.js" defer></script>
+
+  <!-- Custom Styles -->
+  <style>
+    /* Animations */
+    @keyframes pulse {
+      0% {
+        transform: translate(-50%, -50%) scale(1);
+        opacity: 1;
+      }
+      50% {
+        transform: translate(-50%, -50%) scale(1.1);
+        opacity: 0.8;
+      }
+      100% {
+        transform: translate(-50%, -50%) scale(1);
+        opacity: 1;
+      }
+    }
+
+    /* Background and Particles */
+    .background-particles {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100vh;
+      z-index: -1;
+      overflow: hidden;
+      background: inherit;
+    }
+
+    .particle {
+      position: fixed;
+      width: 6px;
+      height: 6px;
+      background: radial-gradient(circle, rgba(0, 191, 255, 0.9) 0%, rgba(0, 191, 255, 0.3) 70%);
+      border-radius: 50%;
+      box-shadow: 0 0 8px rgba(0, 191, 255, 0.6);
+      pointer-events: none;
+      z-index: 2;
+      animation: pulse 1.5s infinite ease-in-out;
+    }
+
+    /* Cursor White Hole */
+    .cursor-white-hole {
+      position: fixed;
+      width: 50px;
+      height: 50px;
+      background: radial-gradient(circle, 
+        rgba(255, 255, 255, 0.8) 0%, 
+        rgba(255, 255, 255, 0.4) 30%,
+        rgba(0, 191, 255, 0.2) 60%,
+        rgba(0, 191, 255, 0) 100%
+      );
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      border-radius: 50%;
+      pointer-events: none;
+      z-index: 1000;
+      transform: translate(-50%, -50%);
+      transition: all 0.05s ease-out;
+      box-shadow: 
+        0 0 15px rgba(255, 255, 255, 0.4),
+        0 0 30px rgba(0, 191, 255, 0.3);
+      will-change: left, top, transform, opacity;
+      display: none;
+      animation: pulse 2s infinite ease-in-out;
+    }
+
+    /* Physics-based text repulsion */
+    .letter {
+      display: inline-block;
+      transition: transform 0.1s cubic-bezier(0.4, 0, 0.2, 1);
+      will-change: transform;
+      transform: translate(0, 0);
+      position: relative;
+      z-index: 1;
+    }
+
+    /* Word spacing in "Who We Are" */
+    .word {
+      white-space: nowrap;
+      display: inline-block;
+      padding: 0 2px;
+      position: relative;
+    }
+
+    /* Card and glass effects */
+    .glass {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      -webkit-backdrop-filter: blur(10px);
+      backdrop-filter: blur(10px);
+      border-radius: 1rem;
+      transition: transform 0.3s ease;
+    }
+
+    .glass:hover {
+      transform: translateY(-2px);
+      background: rgba(255, 255, 255, 0.08);
+    }
+
+    /* Glowing dots behind "Who We Are" section */
+    .glow-dot {
+      position: absolute;
+      width: 12px;
+      height: 12px;
+      background: radial-gradient(circle, rgba(0, 255, 255, 1), rgba(0, 255, 255, 0.2) 80%);
+      border-radius: 9999px;
+      animation: blink 1.2s infinite ease-in-out alternate;
+      z-index: 1;
+    }
+
+    /* Ensure card stays above glow */
+    .relative .bg-white\/5 {
+      position: relative;
+      z-index: 2;
+      background-color: rgba(255, 255, 255, 0.05);
+      -webkit-backdrop-filter: blur(10px); /* Safari 9+ */
+      backdrop-filter: blur(10px);
+    }
+
+    /* Card Pop Effect with Shadow and Light */
+    .card-pop {
+      transition: transform 0.3s ease-out, box-shadow 0.3s ease-out;
+    }
+    .card-pop:hover {
+      transform: scale(1.05);
+      box-shadow: 0 10px 20px rgba(0, 255, 255, 0.3);
+    }
+    .card-pop:hover::before {
+      content: '';
+      position: absolute;
+      top: -5px;
+      left: -5px;
+      right: -5px;
+      bottom: -5px;
+      background: radial-gradient(circle, rgba(0, 255, 255, 0.2), transparent 70%);
+      border-radius: inherit;
+      z-index: -1;
+      animation: lightPulse 1s infinite alternate;
+    }
+
+    /* Blinking Light Background for Cards */
+    .card-blink {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: radial-gradient(circle, rgba(0, 255, 255, 0.1), transparent 70%);
+      border-radius: inherit;
+      animation: blinkLight 2s infinite ease-in-out;
+      z-index: 0;
+    }
+
+    /* Animations */
+    @keyframes blink {
+      0% { opacity: 0.4; transform: scale(1); }
+      100% { opacity: 1; transform: scale(1.6); }
+    }
+
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); opacity: 0.7; }
+      50% { transform: scale(1.2); opacity: 1; }
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes lightPulse {
+      0% { opacity: 0.3; }
+      100% { opacity: 0.6; }
+    }
+
+    @keyframes blinkLight {
+      0% { opacity: 0.1; }
+      50% { opacity: 0.3; }
+      100% { opacity: 0.1; }
+    }
+
+    @keyframes fadeOut {
+      from { opacity: 1; }
+      to { opacity: 0; display: none; }
+    }
+
+    .animate-fade-in { animation: fadeIn 1s ease-out forwards; }
+    .animate-fade-in-slow { animation: fadeIn 1.5s ease-out forwards; }
+
+    /* Input Autofill */
+    input:-webkit-autofill {
+      -webkit-box-shadow: 0 0 0 30px white inset !important;
+    }
+
+    /* Password Toggle */
+    .password-toggle {
+      position: absolute;
+      right: 10px;
+      top: 50%;
+      transform: translateY(-50%);
+      cursor: pointer;
+      color: #6b7280;
+    }
+
+    /* Success Message */
+    .success-message {
+      position: fixed;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(0, 255, 255, 0.8);
+      color: white;
+      padding: 10px 20px;
+      border-radius: 8px;
+      z-index: 100;
+      animation: fadeIn 0.5s ease-out, fadeOut 0.5s ease-out 2s forwards;
+    }
+
+    /* Header Styling */
+    header {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      z-index: 50;
+      background: rgba(0, 0, 0, 0.7);
+      -webkit-backdrop-filter: blur(10px); /* Safari 9+ */
+      backdrop-filter: blur(10px);
+      padding: 0.75rem 1.5rem;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+    }
+
+    /* About Section Styling */
+    #intro {
+      background: linear-gradient(to bottom, #1a1a1a, #2d2d2d);
+      color: #e0e0e0;
+      position: relative;
+      overflow: visible;
+    }
+
+    #intro h2 {
+      color: #00ffcc;
+      text-shadow: 0 0 5px rgba(0, 255, 204, 0.5);
+    }
+
+    #intro p {
+      font-size: 1.125rem;
+      line-height: 1.75;
+      max-width: 48rem;
+    }
+
+    #intro strong {
+      color: #00cc99;
+    }
+
+    /* Responsive Design */
+    @media (max-width: 768px) {
+      .particle { width: 3px; height: 3px; }
+      .cursor-white-hole { width: 30px; height: 30px; }
+      header .flex.items-center.gap-3 {
+        position: absolute;
+        top: 50%;
+        transform: translateY(-50%);
+        right: 1.5rem;
+        flex-direction: row;
+        gap: 0.5rem;
+      }
+      header button {
+        padding: 0.25rem 0.75rem;
+        font-size: 12px;
+      }
+      #intro p {
+        font-size: 1rem;
+      }
+    }
+
+    /* Modal Blur for Cursor */
+    .modal-open .cursor-white-hole {
+      filter: blur(5px);
+      opacity: 0.3;
+      pointer-events: none;
+    }
+
+    /* Password Visibility Feedback */
+    .password-toggle.active {
+      color: #6b7280;
+    }
+  </style>
+</head>
+
+<body class="bg-black text-white font-sans">
+  <!-- Background Particles -->
+  <div class="background-particles"></div>
+
+  <!-- Cursor White Hole -->
+  <div class="cursor-white-hole" id="cursorWhiteHole"></div>
+
+  <!-- Header Section -->
+  <header class="flex justify-between items-center px-6 py-3">
+    <div class="text-xl font-bold" id="logoPlaceholder">
+      <!-- Placeholder for future logo -->
+    </div>
+    <div class="flex items-center gap-3">
+      <button onclick="toggleModal('signinModal')" class="flex items-center gap-2 px-3 h-9 text-sm font-medium border border-white rounded-lg hover:bg-white hover:text-black transition-all" aria-label="Open sign-in modal">
+        <i data-lucide="log-in" class="w-4 h-4" aria-hidden="true"></i> Sign In
+      </button>
+      <button onclick="toggleModal('signupModal')" class="flex items-center gap-2 px-3 h-9 text-sm font-bold text-black bg-green-400 hover:bg-green-300 rounded-lg transition-all" aria-label="Open sign-up modal">
+        <i data-lucide="user-plus" class="w-4 h-4" aria-hidden="true"></i> Sign Up
+      </button>
+    </div>
+  </header>
+
+  <!-- Welcome Section -->
+  <section class="h-screen flex flex-col justify-center items-center text-center px-4 bg-gradient-to-b from-black via-gray-900 to-black pt-16 hero-section">
+    <h1 class="text-5xl md:text-6xl font-extrabold mb-4 bg-gradient-to-r from-green-400 via-blue-500 to-purple-600 bg-clip-text text-transparent animate-fade-in">
+      Welcome to Skill Tree
+    </h1>
+    <p class="text-lg md:text-xl max-w-xl mb-8 text-gray-300 animate-fade-in-slow">
+      Let's embark on a journey of knowledge and create a world of unforgettable memories.
+    </p>
+    <button id="startExploring" class="mt-4 px-6 py-3 bg-gradient-to-r from-green-400 to-blue-500 text-black font-semibold rounded-xl hover:scale-105 transition-all shadow-lg" aria-label="Scroll to About section">
+      Start Exploring 🚀
+    </button>
+  </section>
+
+  <!-- About Section -->
+  <section id="intro" class="min-h-screen px-6 py-16 text-gray-100">
+    <h2 class="text-4xl font-bold text-center mb-12 text-amber-400 animate-fade-in">Who We Are</h2>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-6xl mx-auto text-lg leading-relaxed">
+      <div class="relative">
+        <div class="glow-dot glow-dot-1"></div>
+        <div class="bg-white/5 backdrop-blur-md p-6 rounded-xl shadow-xl border border-white/10 card-pop relative">
+          <div class="card-blink"></div>
+          <h3 class="text-xl font-semibold text-green-300 mb-2 flex items-center gap-2">
+            <i data-lucide="leaf" class="w-5 h-5"></i> Our Mission
+          </h3>
+          <p>We’re building a platform that helps learners visualize their knowledge like a growing tree — where each branch is a topic and every leaf is a lesson learned. It's a space to evolve.</p>
+        </div>
+      </div>
+      <div class="relative">
+        <div class="glow-dot glow-dot-2"></div>
+        <div class="bg-white/5 backdrop-blur-md p-6 rounded-xl shadow-xl border border-white/10 card-pop relative">
+          <div class="card-blink"></div>
+          <h3 class="text-xl font-semibold text-purple-300 mb-2 flex items-center gap-2">
+            <i data-lucide="book-open" class="w-5 h-5"></i> How It Works
+          </h3>
+          <p>Choose a subject. Grow your tree. From science to coding, store what you learn forever. Let AI adapt to your memory, track your growth, and guide you to your best self.</p>
+        </div>
+      </div>
+      <div class="relative">
+        <div class="glow-dot glow-dot-3"></div>
+        <div class="bg-white/5 backdrop-blur-md p-6 rounded-xl shadow-xl border border-white/10 card-pop relative">
+          <div class="card-blink"></div>
+          <h3 class="text-xl font-semibold text-yellow-300 mb-2 flex items-center gap-2">
+            <i data-lucide="brain" class="w-5 h-5"></i> Powered by Psychology & AI
+          </h3>
+          <p>Using psychology-backed techniques like spaced repetition, mnemonics, and behavior analysis, we help you retain what matters. AI learns your style and evolves with you.</p>
+        </div>
+      </div>
+      <div class="relative">
+        <div class="glow-dot glow-dot-4"></div>
+        <div class="bg-white/5 backdrop-blur-md p-6 rounded-xl shadow-xl border border-white/10 card-pop relative">
+          <div class="card-blink"></div>
+          <h3 class="text-xl font-semibold text-pink-300 mb-2 flex items-center gap-2">
+            <i data-lucide="users" class="w-5 h-5"></i> Study. Connect. Grow.
+          </h3>
+          <p>Study solo or with friends. Watch your learning evolve into a majestic tree. Earn certificates, unlock achievements, bloom your blue lily when you master a skill, and inspire others.</p>
+        </div>
+      </div>
+      <div class="relative col-span-1 md:col-span-2">
+        <div class="glow-dot glow-dot-5"></div>
+        <div class="bg-white/5 backdrop-blur-md p-6 rounded-xl shadow-xl border border-white/10 card-pop relative">
+          <div class="card-blink"></div>
+          <h3 class="text-xl font-semibold text-cyan-300 mb-2 flex items-center gap-2">
+            <i data-lucide="lightbulb" class="w-5 h-5"></i> Why Skill Tree Exists
+          </h3>
+          <p>
+            Too often we forget what we’ve learned. Skill Tree is here to change that. This is your memory palace, your personal knowledge garden.
+            Whether you’re mastering math or psychology, Skill Tree helps you remember it all — and makes it fun.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Sign-up Modal -->
+  <div id="signupModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 hidden modal-open" role="dialog" aria-modal="true" tabindex="-1">
+    <div class="bg-white text-black rounded-xl w-full max-w-md p-6 space-y-4 relative shadow-2xl">
+      <button onclick="toggleModal('signupModal')" class="absolute top-4 right-4 text-gray-600 hover:text-red-500 text-xl" aria-label="Close sign-up modal">×</button>
+      <h2 class="text-2xl font-bold mb-4 text-center">Sign Up</h2>
+      <form id="signupForm" onsubmit="handleSignUp(event)" class="space-y-4">
+        <input type="text" placeholder="Full Name" class="w-full p-3 border rounded-md" autocomplete="name" aria-label="Full Name" required />
+        <input id="dobPicker" type="text" placeholder="Date of Birth" class="w-full p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-green-400" readonly aria-label="Date of Birth" required />
+        <div class="relative w-full">
+          <input id="emailInput" type="email" placeholder="Email Address" class="w-full p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-green-400" autocomplete="off" aria-label="Email Address" required />
+          <ul id="emailSuggestions" class="absolute z-10 bg-white border border-gray-200 rounded-md mt-1 hidden w-full max-h-40 overflow-auto text-sm"></ul>
+        </div>
+        <input id="username" type="text" placeholder="Username" class="w-full p-3 border rounded-md" autocomplete="username" aria-label="Username" required />
+        <div id="usernameFeedback" class="text-sm text-gray-600"></div>
+        <div class="relative w-full password-wrapper">
+          <input id="password" type="password" placeholder="Create Password" class="w-full p-3 border rounded-md pr-10 password-input" autocomplete="new-password" aria-label="Create Password" required />
+          <i id="togglePassword" class="fa-solid fa-eye password-toggle"></i>
+        </div>
+        <div id="passwordStrength" class="text-sm text-gray-600"></div>
+        <div class="relative w-full password-wrapper">
+          <input id="repeatPassword" type="password" placeholder="Repeat Password" class="w-full p-3 border rounded-md pr-10 password-input" autocomplete="new-password" aria-label="Repeat Password" required />
+          <i id="toggleRepeatPassword" class="fa-solid fa-eye password-toggle"></i>
+        </div>
+        <div id="passwordMatchFeedback" class="text-sm text-red-500 font-medium" role="alert"></div>
+        <button type="submit" class="w-full bg-green-500 text-white font-semibold py-2 rounded-md hover:bg-green-400 transition-all" aria-label="Submit sign-up form" disabled>Create Account</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Sign-in Modal -->
+  <div id="signinModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 hidden modal-open" role="dialog" aria-modal="true" tabindex="-1">
+    <div class="bg-white text-black rounded-xl w-full max-w-md p-6 space-y-4 relative shadow-2xl">
+      <button onclick="toggleModal('signinModal')" class="absolute top-4 right-4 text-gray-600 hover:text-red-500 text-xl" aria-label="Close sign-in modal">×</button>
+      <h2 class="text-2xl font-bold mb-4 text-center">Sign In</h2>
+      <form id="signinForm" onsubmit="handleSignIn(event)" class="space-y-4">
+        <input id="signinUsername" type="text" placeholder="Username or Email" class="w-full p-3 border rounded-md" autocomplete="username" required aria-label="Username or Email" />
+        <div class="relative w-full password-wrapper">
+          <input id="signinPassword" type="password" placeholder="Password" class="w-full p-3 border rounded-md pr-10 password-input" autocomplete="current-password" required aria-label="Password" />
+          <i id="toggleSigninPassword" class="fa-solid fa-eye password-toggle"></i>
+        </div>
+        <div id="signinFeedback" class="text-sm text-red-500 hidden"></div>
+        <button type="submit" class="w-full bg-green-500 text-white font-semibold py-2 rounded-md hover:bg-green-400 transition-all" aria-label="Submit sign-in form">Login</button>
+        <button type="button" class="w-full text-center text-gray-500 text-sm mt-2 opacity-50 cursor-not-allowed" disabled aria-label="Forgot Password (Coming Soon)">Forgot Password? (Coming Soon)</button>
+        <button type="button" onclick="alert('Google Login Coming Soon!')" class="w-full bg-white text-black px-4 py-2 rounded shadow mt-2 hover:bg-gray-100 transition-all" aria-label="Sign in with Google (coming soon)">
+          <img src="https://www.svgrepo.com/show/475656/google-color.svg" class="inline w-5 h-5 mr-2" alt="Google logo" aria-hidden="true">
+          Sign in with Google (Coming Soon)
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- External Scripts -->
+  <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+
+  <!-- JavaScript -->
+  <script>
+    // Utility Functions
+    function showSuccessMessage(text) {
+      const msg = document.createElement("div");
+      msg.className = "success-message";
+      msg.textContent = text;
+      document.body.appendChild(msg);
+      setTimeout(() => msg.remove(), 2500);
+    }
+
+    function toggleModal(id) {
+      const modal = document.getElementById(id);
+      const body = document.body;
+      modal.classList.toggle("hidden");
+      if (!modal.classList.contains("hidden")) {
+        body.classList.add("modal-open");
+        const firstInput = modal.querySelector("input");
+        if (firstInput) firstInput.focus();
+        modal.addEventListener("keydown", trapFocus);
+      } else {
+        body.classList.remove("modal-open");
+        modal.removeEventListener("keydown", trapFocus);
+      }
+    }
+
+    function trapFocus(event) {
+      const modal = document.querySelector(".fixed:not(.hidden)");
+      const focusable = modal.querySelectorAll('input, button, [tabindex]:not([tabindex="-1"])');
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (event.key === "Tab") {
+        if (event.shiftKey && document.activeElement === first) {
+          event.preventDefault();
+          last.focus();
+        } else if (!event.shiftKey && document.activeElement === last) {
+          event.preventDefault();
+          first.focus();
+        }
+      }
+    }
+
+    function scrollToSection(id) {
+      document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
+    }
+
+    // Password Visibility Toggle
+    function setupPasswordVisibility() {
+      const toggles = [
+        { id: "togglePassword", inputId: "password" },
+        { id: "toggleRepeatPassword", inputId: "repeatPassword" },
+        { id: "toggleSigninPassword", inputId: "signinPassword" }
+      ];
+
+      toggles.forEach(toggle => {
+        const toggleElement = document.getElementById(toggle.id);
+        const inputElement = document.getElementById(toggle.inputId);
+        if (toggleElement && inputElement) {
+          toggleElement.addEventListener("click", () => {
+            const isPassword = inputElement.type === "password";
+            inputElement.type = isPassword ? "text" : "password";
+            toggleElement.classList.toggle("fa-eye");
+            toggleElement.classList.toggle("fa-eye-slash");
+            toggleElement.style.color = isPassword ? "#6b7280" : "#6b7280";
+          });
+        }
+      });
+    }
+
+    function validatePasswords(password, repeatPassword, matchFeedback) {
+      if (!password || !repeatPassword) {
+        matchFeedback.textContent = "Both password fields are required.";
+        matchFeedback.classList.remove("hidden");
+        return false;
+      }
+      if (password !== repeatPassword) {
+        matchFeedback.textContent = "❌ Passwords do not match!";
+        matchFeedback.classList.remove("hidden");
+        return false;
+      }
+      matchFeedback.classList.add("hidden");
+      return true;
+    }
+
+    // Backend API Calls
+    async function checkEmail(email) {
+      try {
+        const response = await fetch(`http://localhost:8080/api/users/check-email?email=${encodeURIComponent(email)}`, {
+          method: 'GET',
+          headers: { 'Content-Type': 'application/json' }
+        });
+        const data = await response.json();
+        return data.data || false; // data.data is true if email exists
+      } catch (error) {
+        console.error("Error checking email:", error);
+        return false;
+      }
+    }
+
+    // Form Handling
+    async function handleSignUp(event) {
+      event.preventDefault();
+      const form = document.getElementById("signupForm");
+      const fullName = form.querySelector("input[placeholder='Full Name']").value.trim();
+      const dob = document.getElementById("dobPicker").value;
+      const email = document.getElementById("emailInput").value.trim().toLowerCase();
+      const username = document.getElementById("username").value.trim();
+      const password = document.getElementById("password").value;
+      const repeatPassword = document.getElementById("repeatPassword").value;
+      const matchFeedback = document.getElementById("passwordMatchFeedback");
+      const usernameFeedback = document.getElementById("usernameFeedback");
+      const signupButton = document.querySelector("#signupForm button[type='submit']");
+
+      if (!fullName || !dob || !email || !username || !password || !repeatPassword) {
+        alert("Please fill in all fields!");
+        return;
+      }
+      if (!validatePasswords(password, repeatPassword, matchFeedback)) return;
+
+      if (!/^[A-Za-z]{3,}$/.test(username)) {
+        usernameFeedback.textContent = "⚠️ Alert: Only letters (a-z) allowed—power up with at least 3!";
+        usernameFeedback.className = "text-sm text-red-600 font-semibold";
+        signupButton.disabled = true;
+        return;
+      }
+
+      const exists = await checkEmail(email);
+      if (exists) {
+        usernameFeedback.textContent = "❌ This email is already linked to a username!";
+        usernameFeedback.className = "text-sm text-red-600 font-semibold";
+        signupButton.disabled = true;
+        return;
+      }
+
+      const randomSuffix = `#${Math.floor(1000 + Math.random() * 9000)}`;
+      const finalUsername = `${username}${randomSuffix}`;
+      usernameFeedback.textContent = `🔥 Epic Choice! Your username is ${finalUsername}`;
+      usernameFeedback.className = "text-sm text-green-600 font-semibold";
+
+      try {
+        const response = await fetch('http://localhost:8080/api/users', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ fullName, username: finalUsername, email, password, dob })
+        });
+        const data = await response.json();
+        if (data.success) {
+          toggleModal("signupModal");
+          showSuccessMessage(`Sign-up successful! Welcome, ${username}!`);
+        } else {
+          showToast(data.message || "Registration failed", false);
+        }
+      } catch (error) {
+        console.error(error);
+        showToast("Registration failed. Try again.", false);
+      }
+    }
+
+    async function handleSignIn(event) {
+      event.preventDefault();
+      const username = document.getElementById("signinUsername").value.trim().toLowerCase();
+      const password = document.getElementById("signinPassword").value;
+      const feedback = document.getElementById("signinFeedback");
+
+      if (!username || !password) {
+        feedback.textContent = "Please enter both username or email and password.";
+        feedback.classList.remove("hidden");
+        return;
+      }
+
+      try {
+        const response = await fetch('http://localhost:8080/api/users/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username, password, email: username.includes('@') ? username : '' })
+        });
+        const data = await response.json();
+        if (data.success) {
+          toggleModal("signinModal");
+          showSuccessMessage(`Welcome back, ${username.split('@')[0]}!`);
+          feedback.classList.add("hidden");
+        } else {
+          feedback.textContent = `Invalid username, email, or password.`;
+          feedback.classList.remove("hidden");
+        }
+      } catch (error) {
+        feedback.textContent = "Error logging in.";
+        feedback.classList.remove("hidden");
+      }
+    }
+
+    // Animation and Interaction
+    document.addEventListener("DOMContentLoaded", () => {
+      lucide.createIcons();
+      setupPasswordVisibility();
+
+      // Wrap letters in spans for "Who We Are" section
+      document.querySelectorAll("#intro p").forEach(p => {
+        const words = p.textContent.trim().split(/\s+/);
+        p.innerHTML = words
+          .map(word => `<span class="word">${[...word].map(char => `<span class="letter">${char}</span>`).join('')}</span>`)
+          .join(' ');
+      });
+
+      // Date Picker
+      flatpickr("#dobPicker", {
+        dateFormat: "Y-m-d",
+        maxDate: "today",
+        disableMobile: true,
+        altInput: true,
+        altFormat: "F j, Y",
+        onChange: function(selectedDates, dateStr, instance) {
+          const formatted = instance.altInput.value.replace("D.O.B - ", "");
+          instance.altInput.value = "D.O.B - " + formatted;
+        }
+      });
+
+      // Password Strength
+      const password = document.getElementById("password");
+      const passwordStrength = document.getElementById("passwordStrength");
+      password.addEventListener("input", () => {
+        const val = password.value;
+        let strength = "Weak";
+        if (val.length >= 6 && /[A-Za-z]/.test(val) && /\d/.test(val)) strength = "Medium";
+        if (val.length >= 8 && /[A-Za-z]/.test(val) && /\d/.test(val) && /[\W]/.test(val)) strength = "Strong";
+        passwordStrength.textContent = `Strength: ${strength}`;
+      });
+
+      // Username Validation
+      const username = document.getElementById("username");
+      const feedback = document.getElementById("usernameFeedback");
+      const signupButton = document.querySelector("#signupForm button[type='submit']");
+      const validPattern = /^[A-Za-z]{3,}$/;
+
+      username.addEventListener("input", () => {
+        let debounceTimer;
+        clearTimeout(debounceTimer);
+        const value = username.value.trim();
+        if (value === "" || !validPattern.test(value)) {
+          feedback.textContent = "⚠️ Alert: Only letters (a-z) allowed—power up with at least 3!";
+          feedback.className = "text-sm text-red-600 font-semibold";
+          signupButton.disabled = true;
+          return;
+        }
+        debounceTimer = setTimeout(() => {
+          const randomSuffix = `#${Math.floor(1000 + Math.random() * 9000)}`;
+          const finalUsername = `${value}${randomSuffix}`;
+          feedback.textContent = `🔥 Epic Choice! Your username is ${finalUsername}`;
+          feedback.className = "text-sm text-green-600 font-semibold";
+          signupButton.disabled = false;
+        }, 500);
+      });
+
+      // Email Suggestions
+      const emailInput = document.getElementById("emailInput");
+      const emailSuggestions = document.getElementById("emailSuggestions");
+      const domains = ["gmail.com", "yahoo.com", "outlook.com", "protonmail.com"];
+      emailInput.addEventListener("input", () => {
+        const value = emailInput.value;
+        const atIndex = value.indexOf("@");
+        if (atIndex === -1) {
+          emailSuggestions.classList.add("hidden");
+          return;
+        }
+        const base = value.slice(0, atIndex);
+        const afterAt = value.slice(atIndex + 1).toLowerCase();
+        const filteredDomains = domains.filter(domain => domain.startsWith(afterAt));
+        if (filteredDomains.length === 0 || afterAt.length > domains[0].length) {
+          emailSuggestions.classList.add("hidden");
+          return;
+        }
+        emailSuggestions.innerHTML = filteredDomains
+          .map(domain => `<li class="px-3 py-1 hover:bg-gray-100 cursor-pointer">${base}@${domain}</li>`)
+          .join("");
+        emailSuggestions.classList.remove("hidden");
+        emailSuggestions.querySelectorAll("li").forEach(item => {
+          item.addEventListener("click", () => {
+            emailInput.value = item.textContent;
+            emailSuggestions.classList.add("hidden");
+          });
+        });
+      });
+
+      // Start Exploring Button
+      document.getElementById("startExploring").addEventListener("click", () => {
+        scrollToSection("intro");
+      });
+
+      // Particle Animation with Spring Physics
+      const particles = [];
+      const particleCount = 45; // Reduced for better performance
+      const springStrength = 0.02; // How strongly particles return to natural motion
+      const maxForce = 0.8; // Maximum repulsion force
+      const repelRadius = 100; // Distance at which particles start being affected
+
+      function createParticle() {
+        return {
+          x: Math.random() * window.innerWidth,
+          y: Math.random() * window.innerHeight,
+          vx: (Math.random() - 0.5) * 2,
+          vy: (Math.random() - 0.5) * 2,
+          opacity: Math.random() * 0.5 + 0.3,
+          life: Math.random() * 300 + 200,
+          color: `hsl(${Math.random() * 360}, 70%, 60%)`
+        };
+      }
+
+      for (let i = 0; i < particleCount; i++) particles.push(createParticle());
+
+      function updateParticles() {
+        const cursor = document.getElementById("cursorWhiteHole");
+        const cursorRect = cursor.getBoundingClientRect();
+        const cursorX = cursorRect.left + cursorRect.width / 2 + window.scrollX;
+        const cursorY = cursorRect.top + cursorRect.height / 2 + window.scrollY;
+
+        particles.forEach((p, i) => {
+          p.x += p.vx;
+          p.y += p.vy;
+          p.life--;
+
+          const dx = p.x - cursorX;
+          const dy = p.y - cursorY;
+          const distance = Math.sqrt(dx * dx + dy * dy);
+          if (distance < 70) {
+            const force = 0.15;
+            const angle = Math.atan2(dy, dx);
+            p.vx += Math.cos(angle) * force;
+            p.vy += Math.sin(angle) * force;
+          }
+
+          // Handle boundaries with bounce effect
+          const buffer = 20;
+          if (p.x < -buffer) {
+            p.x = -buffer;
+            p.vx *= -0.5;
+          } else if (p.x > window.innerWidth + buffer) {
+            p.x = window.innerWidth + buffer;
+            p.vx *= -0.5;
+          }
+          if (p.y < -buffer) {
+            p.y = -buffer;
+            p.vy *= -0.5;
+          } else if (p.y > window.innerHeight + buffer) {
+            p.y = window.innerHeight + buffer;
+            p.vy *= -0.5;
+          }
+          
+          // Regenerate particle if too old
+          if (p.life <= 0) {
+            particles[i] = createParticle();
+          }
+        });
+
+        const particleElements = document.querySelectorAll(".particle");
+        particles.forEach((p, i) => {
+          const el = particleElements[i];
+          el.style.left = `${p.x}px`;
+          el.style.top = `${p.y}px`;
+          el.style.background = `radial-gradient(circle, ${p.color} 0%, rgba(${parseInt(p.color.split(',')[0].split('(')[1])}, ${parseInt(p.color.split(',')[1])}, ${parseInt(p.color.split(',')[2])}, 0.3) 70%)`;
+          el.style.opacity = p.opacity;
+        });
+
+        const letters = document.querySelectorAll("#intro .letter");
+        letters.forEach(letter => {
+          const rect = letter.getBoundingClientRect();
+          const letterX = rect.left + rect.width / 2 + window.scrollX;
+          const letterY = rect.top + rect.height / 2 + window.scrollY;
+          const dx = letterX - cursorX;
+          const dy = letterY - cursorY;
+          const distance = Math.sqrt(dx * dx + dy * dy);
+          if (distance < 100) {
+            const repelStrength = (1 - distance / 100) * 30;
+            const angle = Math.atan2(dy, dx);
+            const repelX = Math.cos(angle) * repelStrength;
+            const repelY = Math.sin(angle) * repelStrength;
+            letter.style.transform = `translate(${repelX}px, ${repelY}px)`;
+          } else {
+            letter.style.transform = 'translate(0, 0)';
+          }
+        });
+
+        requestAnimationFrame(updateParticles);
+      }
+
+      for (let i = 0; i < particleCount; i++) {
+        const div = document.createElement("div");
+        div.className = "particle";
+        document.body.appendChild(div);
+      }
+
+      updateParticles();
+
+      // Cursor Logic
+      const cursorWhiteHole = document.getElementById("cursorWhiteHole");
+      let lastX = 0;
+      let lastY = 0;
+      let isFirstMove = true;
+
+      function updateCursorPosition(x, y) {
+        lastX = x;
+        lastY = y;
+        cursorWhiteHole.style.left = `${x}px`;
+        cursorWhiteHole.style.top = `${y}px`;
+        if (isFirstMove) {
+          cursorWhiteHole.style.display = 'block';
+          isFirstMove = false;
+        }
+      }
+
+      document.addEventListener("mousemove", (e) => {
+        requestAnimationFrame(() => updateCursorPosition(e.clientX, e.clientY));
+      });
+
+      // Touch support for mobile
+      document.addEventListener("touchmove", (e) => {
+        const touch = e.touches[0];
+        requestAnimationFrame(() => updateCursorPosition(touch.clientX, touch.clientY));
+      }, { passive: true });
+    });
+  </script>
+</body>
+
+</html>

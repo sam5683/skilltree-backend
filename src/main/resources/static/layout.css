@@ -1,0 +1,36 @@
+.custom-cursor {
+    cursor: none;
+}
+
+.white-hole {
+    position: fixed;
+    width: 24px;
+    height: 24px;
+    background: radial-gradient(circle, rgba(255, 255, 255, 0.9) 0%, rgba(255, 255, 255, 0.1) 70%, transparent 100%);
+    border-radius: 50%;
+    pointer-events: none;
+    transform: translate(-50%, -50%);
+    z-index: 9999;
+    mix-blend-mode: screen;
+    will-change: transform;
+    transition: opacity 0.3s ease;
+}
+
+/* Hide white hole when over interactive elements */
+button:hover ~ .white-hole,
+a:hover ~ .white-hole,
+input:hover ~ .white-hole,
+.glass:hover ~ .white-hole,
+[role="button"]:hover ~ .white-hole {
+    opacity: 0;
+    cursor: pointer;
+}
+
+/* Glass effect optimization */
+.glass {
+    -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(10px);
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    will-change: transform;
+}

@@ -43,93 +43,63 @@ public class UserController {
     @PostMapping
     public ResponseEntity<ApiResponse<User>> createUser(@Valid @RequestBody User user) {
         try {
-            // Basic field validation
-            if (user.getUsername() == null || user.getUsername().trim().isEmpty()) {
-                return ResponseEntity.badRequest()
-                    .body(new ApiResponse<>(false, "Username is required", null));
-            }
-            
-            if (user.getEmail() == null || user.getEmail().trim().isEmpty()) {
-                return ResponseEntity.badRequest()
-                    .body(new ApiResponse<>(false, "Email is required", null));
-            }
-            
+            // Validate password and confirmation are provided
             if (user.getPassword() == null || user.getPasswordConfirm() == null) {
-                return ResponseEntity.badRequest()
-                    .body(new ApiResponse<>(false, "Both password and confirmation are required", null));
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                        .body(new ApiResponse<>(false, "Both password and confirmation are required", null));
             }
 
-            // Password match validation
+            // Validate password matches confirmation
             if (!user.isPasswordMatching()) {
-                return ResponseEntity.badRequest()
-                    .body(new ApiResponse<>(false, "Passwords do not match", null));
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                        .body(new ApiResponse<>(false, "Passwords do not match", null));
             }
 
-            // Password complexity validation
+            // Validate password complexity
             String password = user.getPassword();
             if (password.length() < 8) {
-                return ResponseEntity.badRequest()
-                    .body(new ApiResponse<>(false, "Password must be at least 8 characters long", null));
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                        .body(new ApiResponse<>(false, "Password must be at least 8 characters long", null));
             }
 
-            // Build comprehensive password validation message
+            // Create error message for all password requirements not met
             StringBuilder errors = new StringBuilder();
-            
-            // Check for 3 letters
             if (!PASSWORD_LETTERS.matcher(password).find()) {
                 errors.append("3 letters, ");
             }
-            
-            // Check for 2 numbers
             if (!PASSWORD_NUMBERS.matcher(password).find()) {
                 errors.append("2 numbers, ");
             }
-            
-            // Check for special character
             if (!PASSWORD_SPECIAL.matcher(password).find()) {
                 errors.append("1 special character (@$!%*#?&), ");
             }
 
-            // If any validation failed, return the error message
             if (errors.length() > 0) {
                 errors.insert(0, "Password must contain: ");
                 errors.setLength(errors.length() - 2); // Remove last comma and space
-                return ResponseEntity.badRequest()
-                    .body(new ApiResponse<>(false, errors.toString(), null));
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                        .body(new ApiResponse<>(false, errors.toString(), null));
             }
 
-            try {
-                // Email validation and normalization
-                user.setEmail(user.getEmail().toLowerCase().trim());
-                if (userService.existsByEmail(user.getEmail())) {
-                    return ResponseEntity.status(HttpStatus.CONFLICT)
+            // Convert and validate email
+            user.setEmail(user.getEmail().toLowerCase().trim());
+            if (userService.existsByEmail(user.getEmail())) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                         .body(new ApiResponse<>(false, "Email already exists", null));
-                }
-
-                // Check if username exists
-                if (userService.findByUsername(user.getUsername()) != null) {
-                    return ResponseEntity.status(HttpStatus.CONFLICT)
-                        .body(new ApiResponse<>(false, "Username already exists", null));
-                }
-
-                // Set timestamps
-                LocalDateTime now = LocalDateTime.now();
-                user.setCreatedAt(now);
-                user.setLastLogin(now);
-            
-                // Create the user and return response
-                User createdUser = userService.createUser(user);
-                if (createdUser != null) {
-                    createdUser.setPassword(null); // Hide password in response
-                    return ResponseEntity.ok(new ApiResponse<>(true, "User created successfully", createdUser));
-                } else {
-                    return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                        .body(new ApiResponse<>(false, "Failed to create user", null));
-                }
-            } catch (Exception e) {
-                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(new ApiResponse<>(false, "Error creating user: " + e.getMessage(), null));
             }
+            
+            // Set timestamps
+            LocalDateTime now = LocalDateTime.now();
+            if (user.getCreatedAt() == null) {
+                user.setCreatedAt(now);
+            }
+            user.setLastLogin(now);
+            
+            // Create user and hide sensitive data in response
+            User createdUser = userService.createUser(user);
+            createdUser.setPassword(null);
+            
+            return ResponseEntity.ok(new ApiResponse<>(true, "User created successfully", createdUser));
             
         } catch (Exception e) {
             // Log the full error for debugging
